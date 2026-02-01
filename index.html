@@ -1,31 +1,449 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-  <meta http-equiv="Content-Style-Type" content="text/css">
-  <title></title>
-  <meta name="Generator" content="Cocoa HTML Writer">
-  <meta name="CocoaVersion" content="2685.3">
-  <style type="text/css">
-    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; text-align: center; font: 18.0px 'Helvetica Neue'; color: #0e0e0e; -webkit-text-stroke: #0e0e0e; background-color: #ffffff; background-color: rgba(255, 255, 255, 0.85)}
-    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; text-align: center; font: 12.0px 'Helvetica Neue'; color: #151515; -webkit-text-stroke: #151515; min-height: 15.0px}
-    p.p4 {margin: 0.0px 0.0px 22.0px 0.0px; text-align: center; font: 16.0px 'Helvetica Neue'; color: #151515; -webkit-text-stroke: #151515}
-    p.p5 {margin: 0.0px 0.0px 0.0px 0.0px; text-align: center; font: 18.0px 'Helvetica Neue'; color: #ffffff; -webkit-text-stroke: #ffffff; background-color: #25bd4c}
-    p.p6 {margin: 0.0px 0.0px 0.0px 0.0px; text-align: center; font: 18.0px '.Apple Color Emoji UI'; color: #ffffff; -webkit-text-stroke: #ffffff; background-color: #e82c35}
-    span.s1 {font: 18.0px '.Apple Color Emoji UI'; font-kerning: none}
-    span.s2 {font-kerning: none}
-    span.s3 {font-kerning: none; background-color: rgba(255, 255, 255, 0.93)}
-    span.s4 {font: 32.0px '.Apple Color Emoji UI'; font-kerning: none; background-color: rgba(255, 255, 255, 0.93)}
-    span.s5 {font: 16.0px '.Apple Color Emoji UI'; font-kerning: none; background-color: rgba(255, 255, 255, 0.93)}
-    span.s6 {font: 18.0px 'Helvetica Neue'; font-kerning: none}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Valentine?</title>
+  <style>
+    :root{
+      --bg1:#ffdde1;
+      --bg2:#ee9ca7;
+      --card:#ffffffee;
+      --text:#1b1b1b;
+      --yes:#22c55e;
+      --no:#ef4444;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      /* FIX 1: proper centering on mobile (address bar safe viewport) */
+      min-height: 100svh;     /* mobile-safe viewport height */
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding: 22px 14px;     /* keeps it visually centered & not stuck low */
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      background: radial-gradient(circle at 20% 20%, var(--bg1), var(--bg2));
+      overflow:hidden;
+      color:var(--text);
+    }
+
+    .card{
+      width:min(720px, 92vw);
+      background:var(--card);
+      border-radius:24px;
+      padding:28px 22px;
+      box-shadow: 0 18px 60px rgba(0,0,0,.18);
+      position:relative;
+      text-align:center;
+      margin:auto; /* extra safety */
+    }
+
+    h1{
+      margin:0 0 10px;
+      font-size: clamp(26px, 4vw, 44px);
+      line-height:1.1;
+    }
+    .sub{
+      margin:0 0 22px;
+      opacity:.8;
+      font-size: clamp(14px, 2.2vw, 16px);
+    }
+
+    .btnRow{
+      display:flex;
+      gap:14px;
+      justify-content:center;
+      align-items:center;
+      position:relative;
+      padding-top:8px;
+      min-height:76px;
+    }
+
+    button{
+      border:none;
+      border-radius:999px;
+      padding:14px 26px;
+      font-size:18px;
+      font-weight:700;
+      cursor:pointer;
+      box-shadow: 0 12px 28px rgba(0,0,0,.12);
+      transition: transform .35s ease, box-shadow .25s ease, filter .25s ease;
+      user-select:none;
+      touch-action: manipulation;
+    }
+    button:active{ transform: translateY(1px) scale(0.99); }
+
+    #yesBtn{
+      background:var(--yes);
+      color:white;
+      transform: scale(1);
+      transition: transform 0.9s ease; /* gradual growth */
+    }
+    #yesBtn:hover{
+      filter:brightness(1.03);
+      box-shadow: 0 14px 32px rgba(34,197,94,.28);
+    }
+
+    /* Desktop NO behavior (we'll override on touch devices via JS) */
+    #noBtn{
+      background:var(--no);
+      color:white;
+      position:absolute;
+      left:50%;
+      transform: translateX(110px);
+      top:8px;
+      will-change: left, top, transform;
+    }
+
+    #confetti{
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      z-index:999;
+      display:none;
+    }
+
+    #musicBtn{
+      position:fixed;
+      right:16px;
+      bottom:16px;
+      z-index:1000;
+      border:none;
+      border-radius:999px;
+      padding:10px 14px;
+      font-weight:800;
+      cursor:pointer;
+      box-shadow:0 12px 28px rgba(0,0,0,.15);
+      background:#ffffffd9;
+      color:#111;
+      backdrop-filter: blur(6px);
+    }
+
+    .result{
+      display:none;
+      margin-top:18px;
+      animation: pop .5s ease both;
+    }
+    @keyframes pop{
+      from{ transform: translateY(10px); opacity:0 }
+      to{ transform: translateY(0); opacity:1 }
+    }
+
+    .gifWrap{
+      width:min(420px, 86vw);
+      margin: 14px auto 10px;
+      border-radius:18px;
+      overflow:hidden;
+      box-shadow: 0 16px 40px rgba(0,0,0,.18);
+    }
+    .gifWrap img{ width:100%; display:block; }
+
+    .questionBold{
+      font-size: clamp(20px, 3.2vw, 28px);
+      font-weight: 900;
+      margin: 12px 0 6px;
+    }
+    .small{
+      margin: 6px 0 0;
+      opacity:.75;
+    }
+
+    .sparkle{
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      opacity:.12;
+      background:
+        radial-gradient(circle at 10% 20%, #fff 0 2px, transparent 3px),
+        radial-gradient(circle at 70% 30%, #fff 0 2px, transparent 3px),
+        radial-gradient(circle at 30% 70%, #fff 0 2px, transparent 3px),
+        radial-gradient(circle at 90% 80%, #fff 0 2px, transparent 3px);
+      filter: blur(.2px);
+    }
+
+    @media (max-width: 420px){
+      button{ font-size:16px; padding:12px 22px; }
+      .btnRow{ min-height:86px; }
+    }
   </style>
 </head>
 <body>
-<p class="p1"><span class="s1">🔊</span><span class="s2"> Music: Off</span></p>
-<p class="p2"><span class="s2"></span><br></p>
-<h1 style="margin: 0.0px 0.0px 10.0px 0.0px; text-align: center; font: 32.0px 'Helvetica Neue'; color: #151515; -webkit-text-stroke: #151515"><span class="s3"><b>Will you be my valentine Sushant? </b></span><span class="s4">💘</span></h1>
-<p class="p4"><span class="s3">Be honest… but choose wisely </span><span class="s5">😈</span></p>
-<p class="p5"><span class="s2"><b>YES </b></span><span class="s1">💖</span></p>
-<p class="p6"><span class="s6"><b>NO </b></span><span class="s2">🙅‍♂️</span></p>
+
+<canvas id="confetti"></canvas>
+
+<audio id="cuteBgm" loop preload="auto">
+  <source src="cute.mp3" type="audio/mpeg">
+</audio>
+
+<audio id="celebrateBgm" loop preload="auto">
+  <source src="celebration.mp3" type="audio/mpeg">
+</audio>
+
+<button id="musicBtn" aria-label="Toggle music">🔊 Music: Off</button>
+
+<div class="card" id="card">
+  <div class="sparkle"></div>
+
+  <div id="askBlock">
+    <h1>Will you be my valentine <span style="white-space:nowrap;">Sushant?</span> 💘</h1>
+    <p class="sub">Be honest… but choose wisely 😈</p>
+
+    <div class="btnRow" id="btnRow">
+      <button id="yesBtn">YES 💖</button>
+      <button id="noBtn" aria-label="No">NO 🙅‍♂️</button>
+    </div>
+  </div>
+
+  <div class="result" id="result">
+    <div class="gifWrap">
+      <img
+        alt="Mind blown"
+        src="https://media.giphy.com/media/26ufdipQqU2lhNA4g/giphy.gif"
+      />
+    </div>
+    <div class="questionBold">Thashuu mumma 🥹❤️Okayyy… so where ru gonna take me out now? 😏💞</div>
+    <div class="small">Also: you’re officially stuck with me 😌🎉</div>
+  </div>
+</div>
+
+<script>
+  const yesBtn = document.getElementById('yesBtn');
+  const noBtn = document.getElementById('noBtn');
+  const btnRow = document.getElementById('btnRow');
+  const askBlock = document.getElementById('askBlock');
+  const result = document.getElementById('result');
+  const confettiCanvas = document.getElementById('confetti');
+
+  // Music
+  const cuteBgm = document.getElementById('cuteBgm');
+  const celebrateBgm = document.getElementById('celebrateBgm');
+  const musicBtn = document.getElementById('musicBtn');
+
+  let musicEnabled = false;
+  let musicMode = "off"; // off | cute | celebrate
+
+  // Detect phone/touch: no cursor, so make NO a non-option immediately
+  const isTouchDevice =
+    window.matchMedia("(hover: none) and (pointer: coarse)").matches ||
+    "ontouchstart" in window;
+
+  // --- NO button behavior ---
+  let yesScale = 1;
+  let moveCount = 0;
+  let followMode = !isTouchDevice; // Desktop: true, Mobile: false
+
+  const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+
+  function placeNoNearCursor(clientX, clientY){
+    const rowRect = btnRow.getBoundingClientRect();
+    const bRect = noBtn.getBoundingClientRect();
+
+    const margin = 12;
+    const offsetX = 70;
+    const offsetY = -18;
+
+    let x = clientX + offsetX;
+    let y = clientY + offsetY;
+
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+
+    if (x + bRect.width + margin > vw) x = clientX - offsetX - bRect.width;
+
+    x = clamp(x, margin, vw - bRect.width - margin);
+    y = clamp(y, margin, vh - bRect.height - margin);
+
+    const leftInRow = x - rowRect.left;
+    const topInRow  = y - rowRect.top;
+
+    noBtn.style.left = ⁠ ${leftInRow}px ⁠;
+    noBtn.style.top  = ⁠ ${topInRow}px ⁠;
+    noBtn.style.transform = ⁠ translate(0, 0) ⁠;
+  }
+
+  function growYesGradually(){
+    yesScale = Math.min(1.65, yesScale + 0.012);
+    yesBtn.style.transform = ⁠ scale(${yesScale}) ⁠;
+  }
+
+  // Desktop cursor-follow
+  function onPointerMove(e){
+    if (!followMode) return;
+
+    placeNoNearCursor(e.clientX, e.clientY);
+
+    moveCount++;
+    if (moveCount % 4 === 0) growYesGradually();
+  }
+  window.addEventListener('mousemove', onPointerMove, { passive:true });
+
+  // Mobile: make NO instantly non-clickable and nicely positioned in-row
+  if (isTouchDevice) {
+    // FIX 2: NO is a "non option" on phone
+    noBtn.style.pointerEvents = "none";
+    noBtn.style.opacity = "0.65";
+    noBtn.style.filter = "grayscale(25%)";
+
+    // Keep it in normal flow (no weird absolute position on mobile)
+    noBtn.style.position = "static";
+    noBtn.style.transform = "none";
+    noBtn.style.top = "auto";
+    noBtn.style.left = "auto";
+
+    // Optional: still let YES grow a bit as they interact anywhere
+    window.addEventListener('touchstart', () => growYesGradually(), { passive:true });
+  } else {
+    // Safety: if someone somehow clicks NO, dodge again
+    noBtn.addEventListener('pointerdown', (e)=>{
+      e.preventDefault();
+      growYesGradually();
+      placeNoNearCursor(
+        e.clientX ?? (window.innerWidth/2),
+        e.clientY ?? (window.innerHeight/2)
+      );
+    });
+  }
+
+  // --- Music helpers ---
+  function updateMusicLabel(){
+    if (musicMode === "cute") musicBtn.textContent = "🔊 Music: Cute";
+    else if (musicMode === "celebrate") musicBtn.textContent = "🎉 Music: Party";
+    else musicBtn.textContent = "🔊 Music: Off";
+  }
+
+  async function playCute(){
+    celebrateBgm.pause(); celebrateBgm.currentTime = 0;
+    try{
+      await cuteBgm.play();
+      musicMode = "cute";
+      updateMusicLabel();
+    }catch(e){}
+  }
+
+  async function playCelebrate(){
+    cuteBgm.pause(); cuteBgm.currentTime = 0;
+    try{
+      await celebrateBgm.play();
+      musicMode = "celebrate";
+      updateMusicLabel();
+    }catch(e){}
+  }
+
+  function stopMusic(){
+    cuteBgm.pause();
+    celebrateBgm.pause();
+    musicMode = "off";
+    updateMusicLabel();
+  }
+
+  async function enableMusicFirstTime(){
+    if (musicEnabled) return;
+    musicEnabled = true;
+    await playCute();
+  }
+  window.addEventListener('pointerdown', enableMusicFirstTime, { once:true });
+  window.addEventListener('touchstart', enableMusicFirstTime, { once:true });
+
+  musicBtn.addEventListener('click', async ()=>{
+    if (musicMode === "off"){
+      if (!followMode) await playCelebrate();
+      else await playCute();
+    } else {
+      stopMusic();
+    }
+  });
+
+  // YES click
+  yesBtn.addEventListener('click', async ()=>{
+    followMode = false;
+    askBlock.style.display = 'none';
+    result.style.display = 'block';
+    startConfetti(2000);
+
+    musicEnabled = true;
+    await playCelebrate();
+  });
+
+  // Confetti
+  function startConfetti(durationMs = 1500){
+    confettiCanvas.style.display = 'block';
+    const ctx = confettiCanvas.getContext('2d');
+
+    function resize(){
+      confettiCanvas.width = window.innerWidth * devicePixelRatio;
+      confettiCanvas.height = window.innerHeight * devicePixelRatio;
+      ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    const colors = ['#ff3b81','#ffd166','#06d6a0','#118ab2','#ef476f','#8338ec','#ffbe0b'];
+    const pieces = Array.from({length: 180}, () => ({
+      x: Math.random()*window.innerWidth,
+      y: -20 - Math.random()*window.innerHeight*0.2,
+      r: 3 + Math.random()*5,
+      w: 6 + Math.random()*10,
+      h: 8 + Math.random()*14,
+      vx: (Math.random()-0.5)*4,
+      vy: 2 + Math.random()*5,
+      rot: Math.random()*Math.PI,
+      vr: (Math.random()-0.5)*0.2,
+      color: colors[(Math.random()*colors.length)|0],
+      shape: Math.random() < 0.6 ? 'rect' : 'circle'
+    }));
+
+    const start = performance.now();
+    function tick(now){
+      const t = now - start;
+      ctx.clearRect(0,0,window.innerWidth, window.innerHeight);
+
+      for (const p of pieces){
+        p.x += p.vx;
+        p.y += p.vy;
+        p.rot += p.vr;
+        p.vy += 0.02;
+
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot);
+        ctx.fillStyle = p.color;
+
+        if (p.shape === 'rect'){
+          ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+        } else {
+          ctx.beginPath();
+          ctx.arc(0,0,p.r,0,Math.PI*2);
+          ctx.fill();
+        }
+        ctx.restore();
+
+        if (p.y > window.innerHeight + 30){
+          p.y = -20;
+          p.x = Math.random()*window.innerWidth;
+          p.vy = 2 + Math.random()*5;
+        }
+      }
+
+      if (t < durationMs){
+        requestAnimationFrame(tick);
+      } else {
+        confettiCanvas.style.display = 'none';
+        window.removeEventListener('resize', resize);
+      }
+    }
+    requestAnimationFrame(tick);
+  }
+
+  // Initial NO placement only for desktop (cursor-follow mode)
+  requestAnimationFrame(()=>{
+    updateMusicLabel();
+    if (!isTouchDevice){
+      const rect = btnRow.getBoundingClientRect();
+      placeNoNearCursor(rect.left + rect.width*0.55, rect.top + rect.height*0.5);
+    }
+  });
+</script>
+
 </body>
 </html>
